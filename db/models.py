@@ -3,9 +3,8 @@ DB 정의
 """
 
 from sqlalchemy import Column, String, Integer, BigInteger, Float, Date
-from sqlalchemy.orm import declarative_base
+from database import Base
 
-Base = declarative_base()
 
 # 회사 정보
 class CompanyInfo(Base):
@@ -57,3 +56,5 @@ class TradingByInvestorDaily(Base):
     buy_amount = Column(BigInteger) # 매수 금액
     sell_amount = Column(BigInteger) # 매도 금액
     net_buy_amount = Column(BigInteger) # 순매수 금액
+
+
