@@ -3,5 +3,5 @@
 
 ### reference
 
-https://github.com/INVESTAR/StockAnalysisInPython
-https://github.com/sharebook-kr/pykrx
+- https://github.com/INVESTAR/StockAnalysisInPython
+- https://github.com/sharebook-kr/pykrx
