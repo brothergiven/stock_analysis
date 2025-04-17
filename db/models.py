@@ -33,16 +33,14 @@ class DailyPrice(Base):
     code = Column(String(10), primary_key=True, comment="종목코드")
 
 
-# 개인, 외국인, 기관별 거래 추이
-class TradingByInvestorDaily(Base):
-    __tablename__ = 'trading_by_investor_daily'
+# 해외 주식 데이터
+class ForeignStock(Base):
+    __tablename__ = "foreign_stock"
 
-    date = Column(Date, primary_key=True)
-    code = Column(String(6), primary_key=True)
-    investor_type = Column(String(20), primary_key=True)  # 투자자 구분(예: 개인, 외국인, 기관합계)
-
-    buy_amount = Column(BigInteger) # 매수 금액
-    sell_amount = Column(BigInteger) # 매도 금액
-    net_buy_amount = Column(BigInteger) # 순매수 금액
-
-
+    code = Column(String(16), primary_key=True, comment="종목 코드")
+    name = Column(String(100), nullable=False, comment="종목명 (한글)")
+    eng_name = Column(String(100), nullable=True, comment="종목명 (영문)")
+    exchange = Column(String(50), nullable=False, comment="거래소 이름")
+    type = Column(String(10), nullable=True, comment="상품유형 코드 (1:지수, 2:주식, 3:ETP(ETF), 4: Warrant)")
+    currency = Column(String(10), nullable=True, comment="통화 단위")
+    

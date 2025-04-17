@@ -71,7 +71,8 @@ def load_excel_and_save_to_db(file_path: str, stock_code: str):
 if __name__ == '__main__':
     dir = './files/'
     for filename in os.listdir(dir):
-        filepath = os.path.join(dir, filename)
-        stock_code = filename.replace('.xlsx', '')  # 파일명에서 종목 추출
-        load_excel_and_save_to_db(file_path=filepath, stock_code=stock_code)
-        
+        if filename.endswith(".xlsx"):
+            filepath = os.path.join(dir, filename)
+            stock_code = filename.replace('.xlsx', '')  # 파일명에서 종목 추출
+            load_excel_and_save_to_db(file_path=filepath, stock_code=stock_code)
+            

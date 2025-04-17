@@ -10,7 +10,7 @@ import pandas as pd
 from kis_auth import auth, getTREnv, get_headers
 from sqlalchemy.orm import Session
 from db.models import CompanyInfo
-# 0. 토큰 발급, DB 초기화화
+# 0. 토큰 발급, DB 초기화
 
 auth()
 
