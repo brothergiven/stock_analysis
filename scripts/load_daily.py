@@ -56,12 +56,12 @@ def load_excel_and_save_to_db(file_path: str, stock_code: str):
         for _, row in df.iterrows():
             daily = DailyPrice(
                 date=row["date"],
-                code=row["code"],
                 open=row["open"],
                 high=row["high"],
                 low=row["low"],
                 close=row["close"],
-                volume=row["volume"]
+                volume=row["volume"],
+                code=row["code"]
             )
             session.add(daily)  
     session.commit()
