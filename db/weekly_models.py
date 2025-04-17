@@ -33,3 +33,15 @@ class Kospi200Weekly(Base):
 
     volume = Column(BigInteger, comment="누적 거래량")
     trade_amount = Column(BigInteger, comment="누적 거래대금")
+
+# NASDAQ-100 종목의 주간 데이터 저장
+class NDXWeekly(Base):
+    __tablename__ = "ndx_weekly"
+    code = Column(String(10), primary_key=True, comment="종목 코드")
+    date = Column(Date, primary_key=True, comment="기준일")
+
+    close = Column(BigInteger, nullable=False, comment="종가")
+    open = Column(BigInteger, nullable=False, comment="시가")
+    high = Column(BigInteger, nullable=False, comment="고가")
+    low = Column(BigInteger, nullable=False, comment="저가")
+    acml_volume = Column(BigInteger, comment="누적 거래량")

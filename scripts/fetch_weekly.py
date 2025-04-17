@@ -37,7 +37,7 @@ CUR_YEAR = 2025
 
 for year in range(CUR_YEAR - 10, CUR_YEAR):
     for stock in kospi_200:
-        print("f[조회 시작] {stock.code}, {year}")
+        print(f"[조회 시작] {stock.code}, {year}")
         data = get_kospi200_weekly(env, stock.code, headers, year)
 
         if not data[0].empty:
@@ -49,4 +49,5 @@ for year in range(CUR_YEAR - 10, CUR_YEAR):
             data[1]['code'] = stock.code
             data[1].to_sql('kospi200_weekly', con=engine, if_exists="append", index=False)
         print(f"[저장 완료] {stock.code} {len(data[1])}")
+
 

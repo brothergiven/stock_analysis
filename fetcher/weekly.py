@@ -11,7 +11,7 @@ from kis_auth import auth, getTREnv, get_headers
 
 url_suffix = "/uapi/domestic-stock/v1/quotations/inquire-daily-itemchartprice"
 
-def get_kospi200_weekly(env, stock_code, headers, year) -> dict:
+def get_kospi200_weekly(env, stock_code, headers, year):
     headers['tr_id'] = 'FHKST03010100'
     headers['custtype'] = 'P'
 

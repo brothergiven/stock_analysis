@@ -16,7 +16,7 @@ Base = declarative_base()
 # DB 초기화 (최초 1회 사용)
 def init_db():
     from db.models import CompanyInfo, DailyPrice, ForeignStock
-    from db.weekly_models import Kospi200Weekly, Kospi200WeeklyMeta
+    from db.weekly_models import Kospi200Weekly, Kospi200WeeklyMeta, NDXWeekly
     # DB 스키마 생성
     Base.metadata.create_all(bind=engine)
 
