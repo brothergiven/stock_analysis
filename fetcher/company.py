@@ -20,8 +20,8 @@ def get_company_static_info(_env, headers, stock_code, name, market) -> dict:
     if response.status_code == 200 and data['rt_cd'] == "0":
         print(f"[조회 성공] {stock_code} / 상태코드: {response.status_code} ")   
         out = data["output"]
-        if stock_code == "278990":
-          print(out)  
+        # if stock_code == "278990":
+        #   print(out)  
         return {
             "code": out.get("stck_shrn_iscd", stock_code), # 종목코드
             "name": name, # 종목 명
