@@ -2,6 +2,9 @@
 
 import sys, time
 import os
+
+from db.finstmt_models import Profitability, Stability, Growth, Activity
+
 sys.path.append(os.path.abspath(os.path.join(os.path.dirname(__file__), "..")))
 
 
@@ -13,7 +16,7 @@ from db.models import CompanyInfo
 from db.weekly_models import Kospi200WeeklyMeta
 import xml.etree.ElementTree as ET
 from fetcher.financial_statement_kospi200 import fetch_finstmt
-
+import numpy as np
 
 # 0. 토큰 발급, DB 초기화
 
@@ -58,14 +61,31 @@ df = df[df["stock_code"] != " "]  # 상장 종목만 필터링
 
 li = [('2023', '11014'), ('2023', '11011'), ('2024', '11011'), ('2024', '11012'), ('2024', '11013'), ('2024', '11014') ]
 
+reprt_code_map = {
+    '11011': '-03-31',  # 1분기
+    '11012': '-06-30',  # 반기
+    '11013': '-09-30',  # 3분기
+    '11014': '-12-31',  # 연간
+}
+
 for stock in kospi_200:
-    line = df[df["stock_code"] == stock.code] # 해당 코드 데이터
-    for l in li: # 분기별
-        data = fetch_finstmt(line.iloc[0]['corp_code'], year = l[0], reprt = l[1], idx_cl="M210000")
+    line = df[df["stock_code"] == stock.code]
+    corp_code = line.iloc[0]['corp_code']
+
+    for l in li:
+        data = fetch_finstmt(corp_code, year=l[0], reprt=l[1], idx_cl="M210000")
+        if not data:
+            continue
+
+        date = f"{l[0]}{reprt_code_map[l[1]]}"
+        date_obj = pd.to_datetime(date).date()
+
         df_finst = pd.DataFrame([data])
-        df_finst['corp_code'] = line.iloc[0]['corp_code']
-        df_finst['stock_code'] = stock.code
-        df_finst= df_finst.rename(columns={
+        df_finst["corp_code"] = corp_code
+        df_finst["stock_code"] = stock.code
+
+        df_finst = df_finst.replace("#########", None)
+        df_finst = df_finst.rename(columns={
             '순이익률': 'net_profit_margin',
             '총포괄이익률': 'comprehensive_income_margin',
             '매출총이익률': 'gross_profit_margin',
@@ -78,6 +98,7 @@ for stock in kospi_200:
             '납입자본이익률': 'paid_in_capital_return',
             '영업수익경비율': 'opex_to_orev'
         })
+
         columns_needed = [
             'corp_code',
             'stock_code',
@@ -95,19 +116,32 @@ for stock in kospi_200:
             'opex_to_orev'
         ]
         df_finst = df_finst[[col for col in columns_needed if col in df_finst.columns]]
-        df_finst = df_finst.replace('#########', None)
-        df_finst.to_sql('profitability', con=engine, if_exists="append", index=False)
-        time.sleep(0.3)
+
+        with get_session() as session:
+            obj = Profitability(**df_finst.iloc[0].to_dict())
+            session.merge(obj)
+
 
 # 3. fetch - M220000(안정성 지표)
 
 for stock in kospi_200:
-    line = df[df["stock_code"] == stock.code] # 해당 코드 데이터
-    for l in li: # 분기별
-        data = fetch_finstmt(line['corp_code'], year = l[0], reprt = l[1], idx_cl="M220000")
+    line = df[df["stock_code"] == stock.code]
+    corp_code = line.iloc[0]['corp_code']
+
+    for l in li:
+        data = fetch_finstmt(corp_code, year=l[0], reprt=l[1], idx_cl="M220000")
+        if not data:
+            continue
+
+        date = f"{l[0]}{reprt_code_map[l[1]]}"
+        date_obj = pd.to_datetime(date).date()
+
         df_finst = pd.DataFrame([data])
-        df_finst['corp_code'] = line['corp_code']
-        df_finst['stock_code'] = stock.code
+        df_finst["corp_code"] = corp_code
+        df_finst["stock_code"] = stock.code
+
+        df_finst = df_finst.replace("#########", None)
+
         df_finst = df_finst.rename(columns={
             '자기자본비율': 'equity_ratio',
             '부채비율': 'debt_ratio',
@@ -125,7 +159,8 @@ for stock in kospi_200:
             '유동자산/비유동자산비율': 'current_to_noncurrent_asset_ratio',
             '재고자산/유동자산비율': 'inventory_to_current_asset_ratio'
         })
-        columns_needed=[
+
+        columns_needed = [
             'corp_code',
             'stock_code',
             'date',
@@ -145,20 +180,32 @@ for stock in kospi_200:
             'current_to_noncurrent_asset_ratio',
             'inventory_to_current_asset_ratio'
         ]
-        df_finst =df_finst[[col for col in columns_needed if col in df_finst.columns]]
-        df_finst = df_finst.replace('#########', None)
-        df_finst.to_sql('stability', con=engine, if_exists="append", index=False)
-        time.sleep(0.3)
+        df_finst = df_finst.where(pd.notnull(df_finst), None)
+        df_finst = df_finst[[col for col in columns_needed if col in df_finst.columns]]
+
+        with get_session() as session:
+            obj = Stability(**df_finst.iloc[0].to_dict())
+            session.merge(obj)
 
 # 3. fetch - M230000
 
 for stock in kospi_200:
-    line = df[df["stock_code"] == stock.code] # 해당 코드 데이터
-    for l in li: # 분기별
-        data = fetch_finstmt(line['corp_code'], year = l[0], reprt = l[1], idx_cl="M230000")
+    line = df[df["stock_code"] == stock.code]
+    corp_code = line.iloc[0]['corp_code']
+
+    for l in li:
+        data = fetch_finstmt(corp_code, year=l[0], reprt=l[1], idx_cl="M230000")
+        if not data:
+            continue
+
+        date = f"{l[0]}{reprt_code_map[l[1]]}"
+        date_obj = pd.to_datetime(date).date()
+
         df_finst = pd.DataFrame([data])
-        df_finst['corp_code'] = line['corp_code']
-        df_finst['stock_code'] = stock.code
+        df_finst["corp_code"] = corp_code
+        df_finst["stock_code"] = stock.code
+
+
         df_finst = df_finst.rename(columns={
             '매출액증가율(YoY)': 'revenue_growth_yoy',
             '매출총이익증가율(YoY)': 'gross_profit_growth_yoy',
@@ -175,6 +222,7 @@ for stock in kospi_200:
             '유동부채증가율': 'current_liabilities_growth',
             '비유동부채 증가율': 'noncurrent_liabilities_growth'
         })
+
         columns_needed = [
             'corp_code',
             'stock_code',
@@ -194,51 +242,78 @@ for stock in kospi_200:
             'current_liabilities_growth',
             'noncurrent_liabilities_growth'
         ]
-        df_finst = df_finst.replace('#########', None)
+        df_finst.replace('#########', np.nan, inplace=True)
+        df_finst = df_finst.where(pd.notnull(df_finst), None)
         df_finst = df_finst[[col for col in columns_needed if col in df_finst.columns]]
-        df_finst.to_sql('growth', con=engine, if_exists="append", index=False)
-        time.sleep(0.3)
+
+        with get_session() as session:
+            session.merge(Growth(**df_finst.iloc[0].to_dict()))
+
 
 # 3. fetch - M240000
 
 for stock in kospi_200:
-    line = df[df["stock_code"] == stock.code] # 해당 코드 데이터
-    for l in li: # 분기별
-        data = fetch_finstmt(line['corp_code'], year = l[0], reprt = l[1], idx_cl="M240000")
-        df_finst = pd.DataFrame([data])
-        df_finst['corp_code'] = line['corp_code']
-        df_finst['stock_code'] = stock.code
-        df_finst = df_finst.rename(columns={
-            '총자산회전율': 'total_assets_turnover',
-            '재고자산회전율': 'inventory_turnover',
-            '매출원가/재고자산': 'cogs_to_inventory',
-            '비유동자산회전율': 'noncurrent_assets_turnover',
-            '유형자산회전율': 'tangible_assets_turnover',
-            '타인자본회전율': 'liabilities_turnover',
-            '자기자본회 전율': 'equity_turnover', 
-            '자본금회전율': 'capital_turnover',
-            '배당성향(%)': 'dividend_payout_ratio'
-        })
-        columns_needed=[
-            'corp_code',
-            'stock_code',
-            'date',
-            'total_assets_turnover',
-            'inventory_turnover',
-            'cogs_to_inventory',
-            'noncurrent_assets_turnover',
-            'tangible_assets_turnover',
-            'liabilities_turnover',
-            'equity_turnover',
-            'capital_turnover',
-            'dividend_payout_ratio'
-        ]
-        df_finst = df_finst[[col for col in columns_needed if col in df_finst.columns]]
+    line = df[df["stock_code"] == stock.code]
+    corp_code = line.iloc[0]['corp_code']
 
-        df_finst = df_finst.replace('#########', None)
-        if 'capital_turnover' in df_finst.columns:
-            df_finst = df_finst.astype({
-                'capital_turnover': 'float'
+    for l in li:
+        data = fetch_finstmt(corp_code, year=l[0], reprt=l[1], idx_cl="M240000")
+        if not data:
+            continue
+
+        date = f"{l[0]}{reprt_code_map[l[1]]}"
+        date_obj = pd.to_datetime(date).date()
+
+        with get_session() as session:
+            exists = session.query(Activity).filter(
+                Activity.stock_code == stock.code,
+                Activity.date == date_obj
+            ).first()
+
+            if exists:
+                print(f"[이미 존재하는 데이터] {stock.code} {date}")
+                continue
+
+            df_finst = pd.DataFrame([data])
+            if df_finst is None or df_finst.empty:
+                continue
+            df_finst["corp_code"] = corp_code
+            df_finst["stock_code"] = stock.code
+
+            df_finst = df_finst.replace("#########", None)
+
+            df_finst = df_finst.rename(columns={
+                '총자산회전율': 'total_assets_turnover',
+                '재고자산회전율': 'inventory_turnover',
+                '매출원가/재고자산': 'cogs_to_inventory',
+                '비유동자산회전율': 'noncurrent_assets_turnover',
+                '유형자산회전율': 'tangible_assets_turnover',
+                '타인자본회전율': 'liabilities_turnover',
+                '자기자본회 전율': 'equity_turnover',
+                '자본금회전율': 'capital_turnover',
+                '배당성향(%)': 'dividend_payout_ratio'
             })
-        df_finst.to_sql('activity', con=engine, if_exists="append", index=False)
-        time.sleep(0.3)
+
+            columns_needed = [
+                'corp_code',
+                'stock_code',
+                'date',
+                'total_assets_turnover',
+                'inventory_turnover',
+                'cogs_to_inventory',
+                'noncurrent_assets_turnover',
+                'tangible_assets_turnover',
+                'liabilities_turnover',
+                'equity_turnover',
+                'capital_turnover',
+                'dividend_payout_ratio'
+            ]
+
+
+
+            df_finst = df_finst[[col for col in columns_needed if col in df_finst.columns]]
+            df_finst.replace('#########', None, inplace=True)
+            df_finst = df_finst.where(pd.notnull(df_finst), None)
+            # DB insert
+            with get_session() as session:
+                session.merge(Activity(**df_finst.iloc[0].to_dict()))
