@@ -17,6 +17,7 @@ Base = declarative_base()
 def init_db():
     from db.models import CompanyInfo, DailyPrice, ForeignStock
     from db.weekly_models import Kospi200Weekly, Kospi200WeeklyMeta, NDXWeekly
+    from db.finstmt_models import Activity, Growth, Profitability, Stability
     # DB 스키마 생성
     Base.metadata.create_all(bind=engine)
 
