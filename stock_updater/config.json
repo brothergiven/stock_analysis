@@ -1,0 +1,10 @@
+{
+  "database": {
+    "url": "env:DB_URL"
+  },
+  "api": {
+    "delay": 0.3,
+    "max_retries": 3,
+    "timeout": 30
+  }
+}

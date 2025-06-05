@@ -1,0 +1,11 @@
+.idea
+
+.token.json
+.env
+.editorconfig
+__pycache__/
+*.py[cod]
+*$py.class
+.ipynb_checkpoints
+
+.idea
