@@ -8,13 +8,13 @@ load_dotenv()
 
 
 MY_URL = "https://openapi.koreainvestment.com:9443"
-MY_APP= os.getenv("MY_APP")
-MY_SEC= os.getenv("MY_SEC")
+MY_APP= os.getenv("KIS_APP")
+MY_SEC= os.getenv("KIS_SEC")
 
 #계좌번호 앞 8자리
-MY_ACCT="43016876"
+MY_ACCT= os.getenv("KIS_ACCT")
 #계좌번호 뒤 2자리
-MY_PROD= "01"
+MY_PROD= os.getenv("KIS_PROD")
 
 
 KISEnv = namedtuple("KISEnv", [
