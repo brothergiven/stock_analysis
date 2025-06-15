@@ -87,20 +87,7 @@ class NasdaqDataUpdater:
                 self.fetch_and_store_weekly(ticker, start_date, today)
         finally:
             session.close()
-
-    def update_ticker_data(self, ticker: str):
-        today = datetime.date.today()
-        session = self.Session()
-        try:
-            latest = session.query(func.max(NDXWeekly.date))\
-                .filter(NDXWeekly.code == ticker)\
-                .scalar()
-            start_date = datetime.date(2015, 1, 1) if latest is None else latest + datetime.timedelta(days=1)
-            if start_date <= today:
-                self.fetch_and_store_weekly(ticker, start_date, today)
-            time.sleep(0.1)
-        finally:
-            session.close()
+            
     def get_data_status(self):
         session = self.Session()
         result = {}
@@ -118,6 +105,7 @@ class NasdaqDataUpdater:
         finally:
             session.close()
         return result
+    
     def fetch_and_store_daily(self, ticker: str, date: datetime.date):
         print(f"[DAILY 조회] {ticker}: {date}")
         try:

@@ -12,7 +12,6 @@ from kospi_financial_updater import KospifinancialUpdater
 from nasdaq_financial_updater import NasdaqFinancialUpdater
 from kis_auth import auth
 from nasdaq_meta_updater import NDXMetaUpdater
-from util.cik_map import build_cik_map
 from db.database import init_db
 load_dotenv()  # .env 파일 로드
 
@@ -40,20 +39,17 @@ def create_config_from_file(config_data: dict) -> Config:
     )
 
 def main():
-    parser = argparse.ArgumentParser(description='NASDAQ 데이터 수집기')
+    parser = argparse.ArgumentParser(description='NASDAQ / KOSPI 데이터 수집기')
     parser.add_argument('--dataset', choices=['nasdaq-weekly', 'kospi200-weekly', 'nasdaq-financial', 'nasdaq-meta', 'kospi-financial'], required=True,
                         help='데이터셋 종류 선택')
     parser.add_argument('--mode', choices=['init', 'update', 'status'], required=False,
                         help='작업 모드 선택')
     parser.add_argument('--config', default='config.json', help='설정 파일 경로')
-    parser.add_argument('--tickers', nargs='*', help='특정 종목만 업데이트')
 
     args = parser.parse_args()
 
     config_data = load_config(args.config)
     config = create_config_from_file(config_data)
-    
-    cik_map = build_cik_map()  # {ticker: cik} 
 
     init_db()
     auth()
@@ -66,13 +62,8 @@ def main():
             updater.full_update()
 
         elif args.mode == 'update':
-            if args.tickers:
-                print(f"[선택 종목 업데이트] {', '.join(args.tickers)}")
-                for ticker in args.tickers:
-                    updater.update_ticker_data(ticker)
-            else:
-                print("[NASDAQ 주간 증분 업데이트 시작]")
-                updater.incremental_update()
+            print("[NASDAQ 주간 증분 업데이트 시작]")
+            updater.incremental_update()
 
         elif args.mode == 'status':
             print("[데이터 현황 조회]")
@@ -119,6 +110,7 @@ def main():
         elif args.mode == 'status':
             print("[NASDAQ 재무정보 수집 현황]")
             updater.get_data_status()
+            
     elif args.dataset == 'nasdaq-meta':
         updater = NDXMetaUpdater(config)
         print("[NASDAQ 메타정보 수집 시작]")
@@ -126,7 +118,6 @@ def main():
         
     elif args.dataset == 'kospi-financial':
         updater = KospifinancialUpdater(config)
-        
         if args.mode == 'init':
             print("[KOSPI200 재무정보 초기 수집 시작]")
             updater.full_update()
