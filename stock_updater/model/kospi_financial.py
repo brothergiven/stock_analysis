@@ -9,6 +9,7 @@ from db.database import Base
 class Kospi200Financial(Base):
     __tablename__ = "kospi200_financial"
 
+    ticker_code = Column(String(12), nullable=False)
     corp_code = Column(String(12), nullable=False, primary_key=True)
     year = Column(Integer, nullable=False, primary_key=True)
     reprt_code = Column(String(6), nullable=False)  # 11011, 11012, ...

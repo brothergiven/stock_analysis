@@ -9,11 +9,13 @@ import time
 import datetime
 from fetcher.kospi_finance import fetch_dart_financials, extract_key_accounts  
 from util.corp_code import get_corp_code_map, kospi200_tickers
+
 @dataclass
 class Config:
     DATABASE_URL: str
     API_DELAY: float
     MAX_RETRIES: int
+    
 class KospifinancialUpdater:
     def __init__(self, config: Config):
         self.engine = create_engine(config.DATABASE_URL)
@@ -33,6 +35,7 @@ class KospifinancialUpdater:
             print(f"[FETCH] {ticker} {year} {reprt_code}")
             raw = fetch_dart_financials(corp_code, year, reprt_code, fs_div="CFS")
             parsed = extract_key_accounts(raw)
+            parsed['ticker'] = ticker
             self.save_to_db(corp_code, year, reprt_code, parsed)
             return
         except Exception as e:
@@ -83,6 +86,8 @@ class KospifinancialUpdater:
         session = self.Session()
         try:
             financial = Kospi200Financial(
+                ticker_code = data.get('ticker'),
+                
                 corp_code=corp_code,
                 year=year,
                 reprt_code=reprt_code,
@@ -106,4 +111,4 @@ class KospifinancialUpdater:
             session.rollback()
             print(f"[DB Error] {corp_code} {year} {reprt_code}: {e}")
         finally:
-            session.close()
+            session.close() 
